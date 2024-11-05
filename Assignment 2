@@ -1,0 +1,129 @@
+class EBook:
+    def __init__(self, title, author, date_of_publish, type, price):
+        """Initialize an EBook instance."""
+        self.title = title
+        self.author = author
+        self.date_of_publish = date_of_publish
+        self.type = type
+        self.price = price
+
+    def __str__(self):
+        return f"EBook: {self.title}, Author: {self.author}, Type: {self.type}, Price: {self.price} AED"
+
+
+class Customer:
+    def __init__(self, name, contact_info, is_loyalty_member=False):
+        """Initialize a Customer instance."""
+        self._name = name
+        self._contact_info = contact_info
+        self._is_loyalty_member = is_loyalty_member
+
+    def is_loyalty_member(self):
+        return self._is_loyalty_member
+
+    def __str__(self):
+        return f"{self._name}, Loyalty Member: {self._is_loyalty_member}"
+
+
+class ShoppingCart:
+    def __init__(self):
+        """Initialize a ShoppingCart instance."""
+        self.items = []
+
+    def add_item(self, ebook):
+        """Add an ebook to the cart."""
+        if isinstance(ebook, EBook):
+            self.items.append(ebook)
+        else:
+            raise TypeError("Only EBook instances can be added to the cart.")
+
+    def remove_item(self, ebook):
+        """Remove an ebook from the cart."""
+        self.items.remove(ebook)
+
+    def calculate_total(self):
+        """Calculate total price of items in cart."""
+        return sum(ebook.price for ebook in self.items)
+
+    def __str__(self):
+        return f"ShoppingCart: {len(self.items)} items"
+
+
+class Discount:
+    def apply_discounts(self, total, customer, item_count):
+        """Apply discounts based on loyalty and bulk purchases."""
+        discount_applied = False
+        if customer.is_loyalty_member():
+            total *= 0.9  # 10% discount for loyalty members
+            discount_applied = True
+        if item_count >= 5:
+            total *= 0.8  # 20% discount for bulk purchases
+            discount_applied = True
+        return total, discount_applied
+
+
+class Order:
+    def __init__(self, cart, customer):
+        """Initialize an Order instance."""
+        self._cart = cart
+        self._customer = customer
+        self._discount = Discount()
+
+    def calculate_final_total(self):
+        """Calculate total after applying discounts and VAT."""
+        base_total = self._cart.calculate_total()
+        total_with_discounts, self._discount_applied = self._discount.apply_discounts(base_total, self._customer,
+                                                                                      len(self._cart.items))
+        vat = total_with_discounts * 0.08
+        return total_with_discounts + vat
+
+    def __str__(self):
+        return f"Order for {self._customer} - Total: {self.calculate_final_total()} AED"
+
+
+class Invoice:
+    def __init__(self, order):
+        """Initialize an Invoice instance."""
+        self._order = order
+
+    def generate_invoice(self):
+        """Generate and print invoice details."""
+        print("Invoice")
+        print("Customer name:", self._order._customer)
+        print("Items:")
+        for ebook in self._order._cart.items:
+            print(ebook)
+        final_total = self._order.calculate_final_total()
+        print("Total:", final_total, "AED")
+
+        # Print congratulatory message if any discount was applied
+        if self._order._discount_applied:
+            print("Congratulations! You received a discount on your purchase.")
+
+        print("Thank you for your purchase!")
+
+    def __str__(self):
+        return f"Invoice for {self._order._customer}"
+
+# Test Cases
+if __name__ == "__main__":
+    # Creating e-books with the updated details
+    ebook1 = EBook("ZU Students", "Jasem Almeraikhi", "25/09/2023", "Student life", 100.00)
+    ebook2 = EBook("Computational Systems", "Ibrahim Alalawi", "15/01/2023", "ZU Majors", 50.00)
+    ebook3 = EBook("Programming Fundamental", "Ahmed Abdelrahim", "04/11/2024", "Programming", 200.00)
+
+    # Creating a customer
+    customer = Customer("Abdulla", "0567891099", is_loyalty_member=False)
+
+    # Adding e-books to the shopping cart
+    cart = ShoppingCart()
+    cart.add_item(ebook1)
+    cart.add_item(ebook2)
+    cart.add_item(ebook3)
+
+    # Creating an order
+    order = Order(cart, customer)
+
+    # Generating an invoice
+    invoice = Invoice(order)
+    invoice.generate_invoice()
